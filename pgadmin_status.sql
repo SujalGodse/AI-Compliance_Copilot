@@ -1,0 +1,1 @@
+UPDATE public.document_queue SET status = 'pending';

@@ -1,0 +1,98 @@
+question,answer,ground_truth,answer_relevancy,context_recall,context_precision,faithfulness
+What is the base price and price band methodology for ETFs during the pre-open call auction session?,"For Commodity ETFs (Gold/Silver), a call auction in the pre-open session shall be conducted to facilitate discovery of the equilibrium price for trading in units of such ETFs. The base price for determination of price bands of ETFs shall be T-1 day Closing Price i.e. last 30 minutes of Volume Weighted Average Price (VWAP) of the ETF. 
+
+The price band for Commodity ETFs (Gold/Silver) shall be dynamic, with an initial price band of 6. The price band would be flexed by 3 of the base price, after a cooling off period. In case the price movement in the international markets is more than the aggregate Daily Price Limit (DPL) of 9, the same may be further relaxed in stages of 3 by the Stock Exchange with the cooling-off period.","SEBI's circular on ETFs sets out norms for determining the base price and applicable price bands during the call auction in the pre-open session, and specifies the close-out procedure for exchange traded funds.",0.6884,0.7735,0.5,0.2037
+What regulatory reporting obligations do Alternative Investment Funds (AIFs) have to SEBI?,"As per the circular HO/19/28/(1)2026-AFD-SEC3/I/6176/2026 dated March 04, 2026, Alternative Investment Funds (AIFs) have the following regulatory reporting obligations to SEBI:
+
+1. Submit a comprehensive Annual Activity Report at the end of March of each financial year, within 30 calendar days from the end of March, online on the SEBI Intermediary Portal (SI Portal).
+2. Submit a limited Quarterly Activity Report online on the SI Portal in a revised format within 15 calendar days from the end of each quarter, except for the quarter ending March of every year, as the Annual Activity Report includes the data points of the Quarterly Activity Report.
+
+The revised reporting formats will be made available on the website of the Standards Forum (IVCA) within 3 days from the date of issuance of this circular.","SEBI's circular on regulatory reporting by AIFs specifies the format, frequency, and content requirements for periodic reporting by Alternative Investment Funds to the regulator.",0.7702,0.78,0.5,0.1655
+How are mutual fund schemes categorized and rationalized under SEBI's framework?,"Mutual fund schemes are categorized and rationalized under SEBI's framework as follows:
+
+They are broadly classified into the following categories:
+
+A. Equity Scheme: Mutual Fund scheme predominantly investing in equity and equity related instruments.
+B. Debt Scheme: Mutual Fund scheme predominantly investing in debt and debt related instruments.
+C. Hybrid Scheme: Mutual Fund scheme investing in a mix of asset classes i.e. equity, debt, InvITs and commodities related instruments as permitted by SEBI.
+D. Life Cycle Funds
+E. Other Schemes: 
+i. Fund of Fund Schemes
+ii. Passive Schemes for e.g. Index Funds / ETFs
+
+Each category has specific characteristics and a uniform description of the scheme.","SEBI's circular on categorization and rationalization of mutual fund schemes defines standard scheme categories (equity, debt, hybrid, solution-oriented, etc.) to ensure uniformity and comparability across mutual fund houses.",0.7371,0.7611,1.0,0.1217
+What changes were introduced by the addendum to SEBI's circular on borrowing by mutual funds?,"The addendum to SEBI's circular on borrowing by mutual funds has introduced a change in the applicability of guidelines related to intraday borrowings by mutual funds. The guidelines, which were specified in clause 5.9.1 of the SEBI Master Circular for Mutual Funds dated March 20, 2026, were initially supposed to come into effect from March 13, 2026. However, due to operational challenges raised by asset management companies, it has been decided that the applicability of these guidelines shall now come into effect from July 15, 2026.",The addendum modifies or clarifies specific provisions of the original circular governing the conditions and limits under which mutual funds may borrow.,0.7247,0.6098,1.0,0.1639
+What is the special window for transfer and dematerialisation of physical securities under SEBI's ease of doing investment initiative?,"The special window for transfer and dematerialisation of physical securities under SEBI's ease of doing investment initiative is open for a period of one year from February 05, 2026 to February 04, 2027. This window is available for transfer requests which were submitted earlier and were rejected/returned/not attended to due to deficiency in the documents/process/or otherwise, as well as for transfer requests lodged for physical securities sold/purchased prior to April 01, 2019.","SEBI introduced a special window allowing investors to transfer and dematerialise physical securities more easily, as part of its ease of doing investment and ease of doing business initiatives.",0.7961,0.6746,0.5,0.1203
+What are the simplified requirements for an investor to obtain accreditation under SEBI's framework?,"According to the circular, the simplified requirements for an investor to obtain accreditation under SEBI's framework are as follows:
+
+1. The investment manager may finalize or execute the contribution agreement and initiate related operational procedures, subject to certain conditions, pending receipt of the accreditation certificate from an accreditation agency.
+2. The investor shall not be included in the calculation of the corpus of the scheme until they obtain the accreditation certificate from an accreditation agency.
+3. The accreditation agency shall verify the net worth of the investor, and the calculation of net worth shall be given as an Annexure to the net worth certificate.
+4. The requirement of submitting a detailed break-up of net worth has been done away with.
+5. It is optional for the chartered accountant to specify the actual net-worth in the net-worth certificate, while certifying whether it meets the specified threshold.
+
+These simplified requirements are as per the circular dated December 18, 2023, and are intended to make the accreditation process easier and more efficient for investors.","SEBI's circular simplifies the process and documentation requirements for investors seeking accredited investor status, reducing compliance burden for eligibility verification.",0.8082,0.7258,0.5,0.1369
+What compliance reporting formats apply to Specialized Investment Funds (SIFs)?,"The compliance reporting formats applicable to Specialized Investment Funds (SIFs) are as follows:
+
+1. The format for the Compliance Test Report (CTR), as prescribed under Format No. 2.B of the MF Master Circular, shall stand modified to include an additional Part IV, as specified in Annexure A1 to the circular dated January 08, 2026.
+2. The format for the Half-Yearly Trustee Report (HYTR), as prescribed under Format No. 2.C of the MF Master Circular, shall stand modified to include Clause 72A, as specified in Annexure A2 to the circular dated January 08, 2026.
+
+These formats shall be submitted by all Asset Management Companies managing SIFs as part of the CTR and HYTR submitted for Mutual Funds, respectively.",SEBI specifies standardized reporting formats that Specialized Investment Funds must use to disclose their compliance status to the regulator.,0.7716,0.6937,1.0,0.1388
+What is our bank's Know Your Customer (KYC) and Customer Acceptance Policy?,Our bank's Know Your Customer (KYC) and Customer Acceptance Policy is given extensively in another policy of the Bank viz. Policy on Know Your Customer (KYC) Norms/ Anti-Money Laundering (AML)/ Combating of Financing of Terrorism (CFT) uploaded on website by Transaction Monitoring Department.,"The bank's Customer Acceptance Policy sets out due diligence procedures for onboarding customers, including identity verification, risk categorization, and beneficial ownership checks, in line with KYC/AML norms.",0.7902,0.7055,0.5,0.0665
+What is the bank's policy on customer grievance redressal?,"The bank's policy on customer grievance redressal is as follows:
+
+- Customers will be treated fairly at all times.
+- Complaints raised by customers will be dealt with courtesy and on time.
+- The bank will treat all complaints efficiently and fairly as it involves reputational risk and potential loss of business.
+- Bank employees will work in good faith without prejudice to the interests of the customer.
+- Customers will be fully informed of avenues to escalate their complaints/ grievances within the organisation and their rights to alternative remedy, if they are not fully satisfied with the response of the bank to their complaints.
+
+The bank aims to provide a redressal machinery and a review mechanism to keep the redressal machinery robust and sensitive and ensure prompt redress of customer complaints / grievances, trying to minimize recurrence thereby raising the level of service delivery.","The Grievance Redressal Policy establishes the process, timelines, and escalation matrix for customers to raise and resolve complaints, including recourse to the banking ombudsman.",0.7894,0.7267,0.5,0.2119
+What does the bank's Fair Practices Code require in lending?,"The bank's Fair Practices Code requires the following in lending:
+
+1. Furnishing general information about rates of interest, details of processing fees and other charges, penal rates, and any other information that affects the interests of the borrower to enable them make a reasonable comparison with the prevailing charges of other banks.
+2. Acknowledging the application form and indicating the time frame within which a decision on the request for loans/credit facilities will be conveyed.
+3. Discussing the rules/terms and conditions such as margin, security, primary as well as collateral, interest rates, service charges etc. with the borrowers.
+4. Intimating the borrowers immediately, in any case not later than 10 working days from the date of receipt of applications, about the queries arising out of due diligence exercise carried out on the project, additional details/documents required, etc.
+5. Assessing the client's eligibility for the requested facilities from the bank, fulfilling the various norms applicable to the category to which the applicant belongs.
+6. Considering credit requests within a reasonable period of time frame.
+7. Discussing the details with the clients wherever necessary and assessment of the needs be completed quickly.
+8. Putting up the proposals for approval within a specified time frame.","The Fair Practices Code sets standards for transparency, fair treatment, and responsible conduct in the bank's lending and recovery practices.",0.766,0.7098,1.0,0.2212
+What are the key terms of the bank's Deposit Policy?,"The key terms of the bank's Deposit Policy include:
+
+1. **Automatic Renewal Scheme**: Term deposit receipts renewed under this scheme will not be handed over to the customer unless they submit the original (matured) term deposit receipt to be kept on bank record.
+
+2. **Insurance Cover for Deposits**: All bank deposits are covered under the Insurance Scheme offered by the Deposit Insurance and Credit Guarantee Corporation of India (DICGC), subject to certain limits and conditions.
+
+3. **Secrecy of Customer Accounts**: The bank shall not disclose details/particulars of the customer's account to a third person or party without the expressed or implied consent of the customer, except in certain exceptions.
+
+4. **Redressal of Complaints and Grievances**: Depositors have a right to approach the authority designated by the bank for handling customer complaints/grievances. The bank has a Customers Grievance Redressed Policy to assist depositors.
+
+5. **Interest on Deposits**: Interest shall be paid on savings accounts at the rate specified by the bank from time to time, calculated on a daily product basis and credited quarterly. Interest on term deposits shall be calculated at quarterly intervals and paid at the rate decided by the bank, depending upon the period of the deposit.
+
+6. **Stop Payment Facility**: The bank will accept stop payment instructions from depositors in respect of cheques issued/reported lost and not paid till receipt of stop payment instructions.
+
+7. **Nomination**: Depositors can nominate a person to receive the deposit in the event of their death. In the case of joint accounts, nomination or modifications of nomination should be made by all depositors, jointly.
+
+8. **Tax Deduction at Source (TDS)**: The bank has statutory obligations to deduct TDS if the total interest paid/payable on all term deposits held by a person during a financial year exceeds the amount specified under the Income Tax Act.","The Deposit Policy outlines the types of deposit accounts offered, interest rate determination, premature withdrawal terms, and depositor protection measures.",0.7593,0.7046,0.5,0.3162
+How does the bank's Customer Protection Policy address unauthorized transactions?,"The bank's Customer Protection Policy addresses unauthorized transactions by stipulating a transparent and non-discriminatory mechanism for compensating customers for such transactions. The bank will also prescribe specific timelines for effecting such compensation as per the extant regulatory guidelines. Additionally, the burden of proving customer liability in cases of unauthorized electronic banking transactions shall lie on the Bank.",The Customer Protection Policy defines the bank's liability framework and reporting timelines for customers to report unauthorized electronic transactions and get reimbursed.,0.7913,0.6825,0.0,0.0709
+What incentive structure exists for distributors onboarding new investors from B-30 cities and women investors?,"SEBI, vide Circular No. HO/(83)2025-IMD-POD-1/I/152/2025 dated November 27, 2025, prescribed a framework for incentivizing distributors for mobilizing investment/inflows from the following categories of investors at the mutual fund industry level:
+
+1. New individual investors (new PAN) from B-30 cities;
+2. New women individual investors (new PAN) from both T-30 and B-30 cities.
+
+However, the implementation timeline for this incentive structure was extended from February 01, 2026 to March 01, 2026.","SEBI extended the timeline for implementation of additional incentives for distributors who onboard new individual investors from beyond the top 30 (B-30) cities and women investors, to encourage mutual fund penetration.",0.7057,0.7902,0.5,0.1009
+What changes were made regarding the letter of confirmation (LOC) requirement for demat account credits?,"The requirement of issuance of Letter of Confirmation (LOC) has been done away with. The Depositories shall develop a process/system to enable RTAs/listed companies to credit the securities directly to the demat account of the investor after necessary due-diligence by RTAs/listed companies. Any LOC issued before April 02, 2026, may be submitted by the investors to DP for dematerialisation within the specified timeline i.e. 120 days from the date of issuance of LOC.","SEBI's circular does away with the requirement of issuing a letter of confirmation and instead allows direct credit of securities into the demat account, simplifying the investment process.",0.6945,0.6868,0.5,0.1644
+"What are the consequential requirements following amendments to SEBI's Merchant Bankers Regulations, 1992?","The consequential requirements following amendments to SEBI's Merchant Bankers Regulations, 1992, as specified in the circular, are as follows:
+
+1. Revised capital adequacy and new liquid net worth requirements for Merchant Bankers (MBs).
+2. Phased implementation of these requirements for existing MBs, as per the table provided:
+   - Category I: Rs. 25 cr (net worth) and Rs. 6.25 cr (liquid net worth) by January 02, 2027, and Rs. 50 cr (net worth) and Rs. 12.5 cr (liquid net worth) by January 02, 2028.
+   - Category II: Rs. 7.5 cr (net worth) and Rs. 1.875 cr (liquid net worth) by January 02, 2027, and Rs. 10 cr (net worth) and Rs. 2.5 cr (liquid net worth) by January 02, 2028.
+3. Categorization of existing MBs as Category I or Category II by complying with net worth and liquid net worth requirements within the specified time period.
+4. Merchant Bankers not to outsource its core merchant banking activities from the effective date.
+5. Existing MBs having an open mandate/ existing agreement as on the effective date, through which core merchant banking activities have been outsourced to a third party, shall be required to close the same within ninety days from the Effective Date.
+6. Compliance with the requirement of minimum revenue from permitted activities:
+   - Category I: at least Rs. 25 crore (cumulative basis over three financial years).
+   - Category II: at least Rs. 5 crore (cumulative basis over three financial years).
+7. Disclosure and compliance requirements for non-SEBI regulated activities, including separate business units for activities regulated by other FSRs.","SEBI specifies the consequential compliance requirements that merchant bankers must follow as a result of amendments made to the SEBI (Merchant Bankers) Regulations, 1992.",0.7611,0.7203,1.0,0.2509
