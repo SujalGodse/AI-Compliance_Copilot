@@ -625,7 +625,7 @@ Answer:"""
         try:
             client   = Groq(api_key=GROQ_API_KEY)
             response = client.chat.completions.create(
-                model       = "llama-3.3-70b-versatile",
+                model       = "qwen-2.5-coder-32b",
                 messages    = [{"role": "user", "content": prompt}],
                 temperature = 0.3,
                 max_tokens  = 512,

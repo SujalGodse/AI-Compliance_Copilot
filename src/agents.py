@@ -35,8 +35,10 @@ sys.path.insert(0, os.path.join(BASE_DIR, "src"))
 from db import get_db, init_all_tables
 OLLAMA_URL = "http://localhost:11434"
 LLM_MODEL = "llama3.2"
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "gsk_YOUR_GROQ_API_KEY_HERE")
-GROQ_MODEL   = "llama-3.3-70b-versatile"
+GROQ_API_KEY  = os.getenv("GROQ_API_KEY", "gsk_YOUR_GROQ_API_KEY_HERE")
+MODEL_FAST    = "llama-3.1-8b-instant"       # Ultra-fast 8B for Agent 1 Classification
+MODEL_HEAVY   = "qwen-2.5-coder-32b"         # Qwen / 70B model for Agent 3 RAG Summary & Ticket Generation
+GROQ_MODEL    = MODEL_HEAVY
 
 THRESHOLD_HIGH   = 0.80
 THRESHOLD_MEDIUM = 0.60
