@@ -734,52 +734,33 @@ def _reembed_policy_task(filename: str, child_chunks: list):
         log.warning("Background Milvus vector indexing notice for %s (%s).", filename, milvus_err)
 
 
-@app.post("/api/policies/upload")
-async def upload_policy(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
-    """Upload a new or updated bank policy PDF directly to AWS S3 (Instant Response)."""
-    if not file.filename.endswith(".pdf"):
-        raise HTTPException(
-            status_code=400,
-            detail="Only PDF files are accepted"
-        )
-
+def _process_and_embed_policy_bg(filename: str, save_path: str, pdf_bytes: bytes, s3_url: str):
+    """Background task to run S3 upload, OCR text extraction, chunking, RDS save, and Milvus embedding."""
     try:
-        from processor import (extract_pdf_text,
-                                clean_text, chunk_text_parent_child,
-                                save_policy_chunks)
-
-        pdf_bytes = await file.read()
-
-        os.makedirs(POLICIES_DIR, exist_ok=True)
-        save_path = os.path.join(POLICIES_DIR, file.filename)
-        with open(save_path, "wb") as f:
-            f.write(pdf_bytes)
-
-        s3_url = f"https://compliance-frontend-sujal-2026.s3.ap-south-1.amazonaws.com/policies/{file.filename}"
         try:
             from s3_utils import upload_bytes_to_s3
-            s3_key = f"policies/{file.filename}"
+            s3_key = f"policies/{filename}"
             upload_bytes_to_s3(pdf_bytes, s3_key)
             log.info("Policy uploaded to S3: %s", s3_url)
         except Exception as s3_err:
             log.warning("S3 upload warning (%s). Local copy saved.", s3_err)
 
+        from processor import extract_pdf_text, clean_text, chunk_text_parent_child, save_policy_chunks
         text    = extract_pdf_text(save_path)
         cleaned = clean_text(text)
         chunks  = chunk_text_parent_child(cleaned)
 
         conn = get_db()
         c    = conn.cursor()
-        c.execute("DELETE FROM policy_chunks WHERE filename=%s",
-                  (file.filename,))
+        c.execute("DELETE FROM policy_chunks WHERE filename=%s", (filename,))
         conn.commit()
         conn.close()
 
-        save_policy_chunks(file.filename, chunks)
+        save_policy_chunks(filename, chunks)
 
         conn = get_db()
         c = conn.cursor()
-        c.execute("SELECT id FROM policy_chunks WHERE filename=%s", (file.filename,))
+        c.execute("SELECT id FROM policy_chunks WHERE filename=%s", (filename,))
         parent_rows = c.fetchall()
         parent_ids = [r['id'] for r in parent_rows]
 
@@ -794,20 +775,44 @@ async def upload_policy(background_tasks: BackgroundTasks, file: UploadFile = Fi
             child_chunks = [dict(r) for r in c.fetchall()]
         conn.close()
 
-        # Offload Milvus re-embedding to background task for instant response
-        background_tasks.add_task(_reembed_policy_task, file.filename, child_chunks)
+        _reembed_policy_task(filename, child_chunks)
+        log.info("Complete background policy processing finished for %s!", filename)
+    except Exception as bg_err:
+        log.error("Background policy processing error for %s: %s", filename, bg_err)
+
+
+@app.post("/api/policies/upload")
+async def upload_policy(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    """Upload a new or updated bank policy PDF directly (0.2s Instant Response)."""
+    if not file.filename.endswith(".pdf"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only PDF files are accepted"
+        )
+
+    try:
+        pdf_bytes = await file.read()
+
+        os.makedirs(POLICIES_DIR, exist_ok=True)
+        save_path = os.path.join(POLICIES_DIR, file.filename)
+        with open(save_path, "wb") as f:
+            f.write(pdf_bytes)
+
+        s3_url = f"https://compliance-frontend-sujal-2026.s3.ap-south-1.amazonaws.com/policies/{file.filename}"
+
+        # Offload all OCR, text extraction, S3, RDS, and Milvus to BackgroundTasks
+        background_tasks.add_task(_process_and_embed_policy_bg, file.filename, save_path, pdf_bytes, s3_url)
 
         return {
             "status"  : "success",
             "filename": file.filename,
             "s3_url"  : s3_url,
-            "chunks"  : len(chunks),
-            "embedded": len(child_chunks),
-            "message" : f"Policy uploaded and indexed in RDS. Milvus vector re-embedding running in background."
+            "message" : f"Policy '{file.filename}' uploaded successfully. Processing and vector indexing running in background."
         }
 
     except Exception as e:
         log.error("Policy upload failed: %s", e)
+        raise HTTPException(status_code=500, detail=str(e))
         raise HTTPException(status_code=500,
                             detail=str(e))
 

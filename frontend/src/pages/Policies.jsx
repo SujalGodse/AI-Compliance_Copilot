@@ -43,7 +43,7 @@ function Policies() {
     try {
       const res = await axios.post(`${API_BASE}/policies/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 15000
+        timeout: 60000
       })
       setUploadResult(res.data)
       setFile(null)
