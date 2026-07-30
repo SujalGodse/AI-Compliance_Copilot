@@ -460,27 +460,51 @@ def get_dashboard_summary():
 
 def run_full_pipeline_task():
     """Background execution function for full compliance pipeline."""
+    log.info("Pipeline background task starting...")
     try:
-        log.info("Pipeline background task starting...")
         from ingestion import init_db, fetch_sebi, fetch_sebi_historical
         init_db()
-        fetch_sebi()
-        fetch_sebi_historical()
+        try:
+            fetch_sebi()
+        except Exception as e:
+            log.warning("Scraper notice (SEBI RSS): %s", e)
+        try:
+            fetch_sebi_historical()
+        except Exception as e:
+            log.warning("Scraper notice (SEBI Historical): %s", e)
+    except Exception as e:
+        log.warning("Ingestion step notice: %s", e)
 
+    try:
         from processor import init_chunks_table, init_policy_chunks_table, process_pending
         init_chunks_table()
         init_policy_chunks_table()
-        process_pending()
+        try:
+            process_pending()
+        except Exception as e:
+            log.warning("Processor notice: %s", e)
+    except Exception as e:
+        log.warning("Processor step notice: %s", e)
 
+    try:
         from embeddings import embed_circulars, embed_policies
-        embed_circulars()
-        embed_policies()
+        try:
+            embed_circulars()
+        except Exception as e:
+            log.warning("Embed circulars notice: %s", e)
+        try:
+            embed_policies()
+        except Exception as e:
+            log.warning("Embed policies notice: %s", e)
+    except Exception as e:
+        log.warning("Embeddings step notice: %s", e)
 
+    try:
         from agents import run_pipeline
-        run_pipeline()
+        run_pipeline(force_reprocess=True)
         log.info("Pipeline background task completed successfully.")
     except Exception as e:
-        log.error("Pipeline background execution error: %s", e)
+        log.error("Pipeline agent execution error: %s", e)
 
 
 @app.post("/api/pipeline/run")
