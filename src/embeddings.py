@@ -44,6 +44,7 @@ from pymilvus import (
 BASE_DIR    = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_PATH     = os.path.join(BASE_DIR, "db",   "compliance.db")
 LOG_PATH    = os.path.join(BASE_DIR, "logs", "embeddings.log")
+os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
 
 OLLAMA_URL   = "http://localhost:11434"
 EMBED_MODEL  = "bge-m3"

@@ -622,15 +622,23 @@ User Question: {clean_query}
 
 Answer:"""
 
-        client   = Groq(api_key=GROQ_API_KEY)
-        response = client.chat.completions.create(
-            model       = "llama-3.1-8b-instant",
-            messages    = [{"role": "user",
-                            "content": prompt}],
-            temperature = 0.3,
-            max_tokens  = 512,
-        )
-        answer = response.choices[0].message.content.strip()
+        try:
+            client   = Groq(api_key=GROQ_API_KEY)
+            response = client.chat.completions.create(
+                model       = "llama-3.3-70b-versatile",
+                messages    = [{"role": "user", "content": prompt}],
+                temperature = 0.3,
+                max_tokens  = 512,
+            )
+            answer = response.choices[0].message.content.strip()
+        except Exception as groq_err:
+            log.warning("Groq API unavailable in chat_endpoint (%s). Synthesizing answer from context...", groq_err)
+            if stats_context:
+                answer = f"Based on the compliance database:\n\n{stats_context[:1000]}"
+            elif chunks:
+                answer = f"Based on the internal bank policies:\n\n{chunks[0]['text'][:800]}"
+            else:
+                answer = "I do not have information about this in the internal bank policies, regulatory circulars, or compliance database currently available."
 
         sources = [
             {
@@ -645,8 +653,7 @@ Answer:"""
 
     except Exception as e:
         log.error("Chat failed: %s", e)
-        raise HTTPException(status_code=500,
-                            detail=str(e))
+        return {"answer": f"Unable to process query: {str(e)}", "sources": []}
 
 # ─────────────────────────────────────────
 # POLICIES — list and upload

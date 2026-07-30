@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Tickets from './pages/Tickets'
@@ -12,10 +12,9 @@ import Circulars from './pages/Circulars'
 import Evaluation from './pages/Evaluation'
 import './App.css'
 
-
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
@@ -30,7 +29,7 @@ function App() {
           <Route path="/evaluation" element={<Evaluation />} />
         </Routes>
       </Layout>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 
