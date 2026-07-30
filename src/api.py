@@ -688,9 +688,53 @@ def get_policies():
     return {"policies": policies}
 
 
+def _reembed_policy_task(filename: str, child_chunks: list):
+    """Background task to re-embed policy child chunks into Milvus."""
+    try:
+        from embeddings import get_collection, get_embedding, detect_domain, COL_POLICIES
+        collection = get_collection(COL_POLICIES)
+
+        existing = collection.query(
+            expr          = f'filename == "{filename}"',
+            output_fields = ["id"]
+        )
+        if existing:
+            id_expr = ", ".join([f'"{r["id"]}"' for r in existing])
+            collection.delete(expr=f"id in [{id_expr}]")
+            collection.flush()
+            log.info("Deleted %d old vectors for %s", len(existing), filename)
+
+        embedded = 0
+        for row in child_chunks:
+            parent_id = row['parent_id']
+            child_index = row['child_index']
+            chunk_text = row['chunk_text']
+
+            milvus_id = f"policy_{parent_id}_{child_index}"
+            vector    = get_embedding(chunk_text)
+            if vector:
+                collection.insert([{
+                    "id"         : milvus_id,
+                    "vector"     : vector,
+                    "document"   : chunk_text[:65535],
+                    "doc_id"     : "",
+                    "parent_id"  : str(parent_id),
+                    "source"     : "",
+                    "title"      : "",
+                    "child_index": str(child_index),
+                    "domain"     : detect_domain(chunk_text),
+                    "filename"   : filename,
+                }])
+                embedded += 1
+        collection.flush()
+        log.info("Background policy embedding complete for %s: %d chunks embedded.", filename, embedded)
+    except Exception as milvus_err:
+        log.warning("Background Milvus vector indexing notice for %s (%s).", filename, milvus_err)
+
+
 @app.post("/api/policies/upload")
-async def upload_policy(file: UploadFile = File(...)):
-    """Upload a new or updated bank policy PDF directly to AWS S3."""
+async def upload_policy(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+    """Upload a new or updated bank policy PDF directly to AWS S3 (Instant Response)."""
     if not file.filename.endswith(".pdf"):
         raise HTTPException(
             status_code=400,
@@ -701,20 +745,14 @@ async def upload_policy(file: UploadFile = File(...)):
         from processor import (extract_pdf_text,
                                 clean_text, chunk_text_parent_child,
                                 save_policy_chunks)
-        from embeddings import (get_collection,
-                                get_embedding,
-                                detect_domain,
-                                COL_POLICIES)
 
         pdf_bytes = await file.read()
 
-        # Save local copy for OCR fallback (required for scanned PDFs)
         os.makedirs(POLICIES_DIR, exist_ok=True)
         save_path = os.path.join(POLICIES_DIR, file.filename)
         with open(save_path, "wb") as f:
             f.write(pdf_bytes)
 
-        # Upload master PDF directly to AWS S3
         s3_url = f"https://compliance-frontend-sujal-2026.s3.ap-south-1.amazonaws.com/policies/{file.filename}"
         try:
             from s3_utils import upload_bytes_to_s3
@@ -737,7 +775,6 @@ async def upload_policy(file: UploadFile = File(...)):
 
         save_policy_chunks(file.filename, chunks)
 
-        # Retrieve the newly saved child chunks from RDS to embed them
         conn = get_db()
         c = conn.cursor()
         c.execute("SELECT id FROM policy_chunks WHERE filename=%s", (file.filename,))
@@ -752,57 +789,19 @@ async def upload_policy(file: UploadFile = File(...)):
                 FROM policy_chunks_child
                 WHERE parent_id IN ({placeholders})
             """, tuple(parent_ids))
-            child_chunks = c.fetchall()
+            child_chunks = [dict(r) for r in c.fetchall()]
         conn.close()
 
-        embedded = 0
-        try:
-            collection = get_collection(COL_POLICIES)
-
-            # Delete existing vectors for this policy file (Milvus filter by filename)
-            existing = collection.query(
-                expr          = f'filename == "{file.filename}"',
-                output_fields = ["id"]
-            )
-            if existing:
-                id_expr = ", ".join([f'"{r["id"]}"' for r in existing])
-                collection.delete(expr=f"id in [{id_expr}]")
-                collection.flush()
-                log.info("Deleted %d old vectors", len(existing))
-
-            for row in child_chunks:
-                child_id = row['id']
-                parent_id = row['parent_id']
-                child_index = row['child_index']
-                chunk_text = row['chunk_text']
-
-                milvus_id = f"policy_{parent_id}_{child_index}"
-                vector    = get_embedding(chunk_text)
-                if vector:
-                    collection.insert([{
-                        "id"         : milvus_id,
-                        "vector"     : vector,
-                        "document"   : chunk_text[:65535],
-                        "doc_id"     : "",
-                        "parent_id"  : str(parent_id),
-                        "source"     : "",
-                        "title"      : "",
-                        "child_index": str(child_index),
-                        "domain"     : detect_domain(chunk_text),
-                        "filename"   : file.filename,
-                    }])
-                    embedded += 1
-            collection.flush()
-        except Exception as milvus_err:
-            log.warning("Milvus vector indexing error (%s). Text chunks saved to AWS RDS PostgreSQL.", milvus_err)
+        # Offload Milvus re-embedding to background task for instant response
+        background_tasks.add_task(_reembed_policy_task, file.filename, child_chunks)
 
         return {
             "status"  : "success",
             "filename": file.filename,
             "s3_url"  : s3_url,
             "chunks"  : len(chunks),
-            "embedded": embedded,
-            "message" : f"Policy updated on S3. {embedded} chunks embedded."
+            "embedded": len(child_chunks),
+            "message" : f"Policy uploaded and indexed in RDS. Milvus vector re-embedding running in background."
         }
 
     except Exception as e:

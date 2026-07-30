@@ -60,16 +60,16 @@ function AuditTrail() {
               <div style={{ marginTop: '1rem', borderTop: '1px solid #eee', paddingTop: '1rem', fontSize: '0.9rem' }}>
                 <div style={{ marginBottom: '0.6rem' }}>
                   <strong>Agent 1 — Classifier:</strong>{' '}
-                  regulator={a.agent1_out.regulator}, domain={a.agent1_out.domain}, doc_type={a.agent1_out.doc_type}
+                  regulator={a.agent1_out?.regulator || a.regulator || 'N/A'}, domain={a.agent1_out?.domain || a.domain || 'N/A'}, doc_type={a.agent1_out?.doc_type || 'Circular'}
                 </div>
                 <div style={{ marginBottom: '0.6rem' }}>
                   <strong>Agent 2 — Policy Mapper:</strong>{' '}
-                  drift_score={a.agent2_out.drift_score}, priority={a.agent2_out.priority}<br />
-                  affected_policies: {a.agent2_out.affected_policies?.join(', ') || 'none'}
+                  drift_score={a.agent2_out?.drift_score ?? a.drift_score}, priority={a.agent2_out?.priority || a.priority}<br />
+                  affected_policies: {a.agent2_out?.affected_policies?.join(', ') || 'none'}
                 </div>
                 <div>
                   <strong>Agent 3 — Advisor:</strong>{' '}
-                  ticket_id={a.agent3_out.ticket_id}, summary_len={a.agent3_out.summary_len} chars, change_len={a.agent3_out.change_len} chars
+                  ticket_id={a.agent3_out?.ticket_id || a.ticket_id}, summary_len={a.agent3_out?.summary_len || 0} chars, change_len={a.agent3_out?.change_len || 0} chars
                 </div>
                 <div style={{ marginTop: '0.6rem', color: '#999' }}>
                   Processed at: {new Date(a.created_at).toLocaleString()}
