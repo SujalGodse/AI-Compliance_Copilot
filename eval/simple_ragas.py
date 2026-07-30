@@ -94,7 +94,7 @@ Question: {question}
 Answer:"""
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="qwen-2.5-coder-32b",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.2,
         max_tokens=300,
