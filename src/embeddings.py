@@ -830,8 +830,8 @@ def calculate_drift(circular_text: str,
     # ── 5. final drift score ────────────────────────────
     drift_score = round(
         0.60 * semantic_score +
-        0.25 * policy_score   +
-        0.15 * entity_score,
+        0.20 * policy_score   +
+        0.20 * entity_score,
         4
     )
 
