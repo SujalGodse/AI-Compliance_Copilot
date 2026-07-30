@@ -186,9 +186,14 @@ def get_stats():
     processed_circulars = list(c.fetchone().values())[0]
 
     # policy counts
-    c.execute("""SELECT COUNT(DISTINCT filename)
-                 FROM policy_chunks""")
-    total_policies = list(c.fetchone().values())[0]
+    policy_files = set()
+    if os.path.exists(POLICIES_DIR):
+        policy_files.update([f for f in os.listdir(POLICIES_DIR) if f.endswith(".pdf")])
+    c.execute("SELECT DISTINCT filename FROM policy_chunks")
+    for r in c.fetchall():
+        if list(r.values())[0]:
+            policy_files.add(list(r.values())[0])
+    total_policies = len(policy_files)
 
     conn.close()
 
