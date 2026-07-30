@@ -150,11 +150,13 @@ def save_chunks(doc_id, title, parent_child_data, source="sebi"):
 
 
 def save_policy_chunks(filename, parent_child_data):
-    """Save policy parent chunks AND their child chunks to RDS PostgreSQL."""
+    """Save policy parent chunks AND their child chunks to RDS PostgreSQL using batch execution."""
     conn = get_db()
     c    = conn.cursor()
 
     total_children = 0
+    now_str = datetime.now().isoformat()
+
     for parent_index, parent in enumerate(parent_child_data):
         parent_text = parent["parent_text"]
 
@@ -164,18 +166,23 @@ def save_policy_chunks(filename, parent_child_data):
             VALUES (%s, %s, %s, %s, %s)
             RETURNING id
         """, (filename, parent_index, parent_text,
-              len(parent_text.split()), datetime.now().isoformat()))
+              len(parent_text.split()), now_str))
 
         parent_id = c.fetchone()['id']
 
-        for child_index, child_text in enumerate(parent["children"]):
-            c.execute("""
+        child_rows = [
+            (parent_id, child_index, child_text, len(child_text.split()), now_str)
+            for child_index, child_text in enumerate(parent["children"])
+        ]
+
+        if child_rows:
+            from psycopg2.extras import execute_values
+            execute_values(c, """
                 INSERT INTO policy_chunks_child
                 (parent_id, child_index, chunk_text, word_count, created_at)
-                VALUES (%s, %s, %s, %s, %s)
-            """, (parent_id, child_index, child_text,
-                  len(child_text.split()), datetime.now().isoformat()))
-            total_children += 1
+                VALUES %s
+            """, child_rows)
+            total_children += len(child_rows)
 
     conn.commit()
     conn.close()

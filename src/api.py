@@ -689,9 +689,11 @@ def get_policies():
 
 
 def _reembed_policy_task(filename: str, child_chunks: list):
-    """Background task to re-embed policy child chunks into Milvus."""
+    """Background task to re-embed policy child chunks into Milvus using BATCH execution."""
+    if not child_chunks:
+        return
     try:
-        from embeddings import get_collection, get_embedding, detect_domain, COL_POLICIES
+        from embeddings import get_collection, get_embeddings_batch, detect_domain, COL_POLICIES
         collection = get_collection(COL_POLICIES)
 
         existing = collection.query(
@@ -704,30 +706,30 @@ def _reembed_policy_task(filename: str, child_chunks: list):
             collection.flush()
             log.info("Deleted %d old vectors for %s", len(existing), filename)
 
-        embedded = 0
-        for row in child_chunks:
-            parent_id = row['parent_id']
-            child_index = row['child_index']
-            chunk_text = row['chunk_text']
+        texts = [row['chunk_text'] for row in child_chunks]
+        vectors = get_embeddings_batch(texts)
 
-            milvus_id = f"policy_{parent_id}_{child_index}"
-            vector    = get_embedding(chunk_text)
-            if vector:
-                collection.insert([{
+        records = []
+        for i, row in enumerate(child_chunks):
+            if i < len(vectors) and vectors[i]:
+                milvus_id = f"policy_{row['parent_id']}_{row['child_index']}"
+                records.append({
                     "id"         : milvus_id,
-                    "vector"     : vector,
-                    "document"   : chunk_text[:65535],
+                    "vector"     : vectors[i],
+                    "document"   : row['chunk_text'][:65535],
                     "doc_id"     : "",
-                    "parent_id"  : str(parent_id),
+                    "parent_id"  : str(row['parent_id']),
                     "source"     : "",
                     "title"      : "",
-                    "child_index": str(child_index),
-                    "domain"     : detect_domain(chunk_text),
+                    "child_index": str(row['child_index']),
+                    "domain"     : detect_domain(row['chunk_text']),
                     "filename"   : filename,
-                }])
-                embedded += 1
-        collection.flush()
-        log.info("Background policy embedding complete for %s: %d chunks embedded.", filename, embedded)
+                })
+
+        if records:
+            collection.insert(records)
+            collection.flush()
+            log.info("Background policy embedding complete for %s: %d chunks embedded.", filename, len(records))
     except Exception as milvus_err:
         log.warning("Background Milvus vector indexing notice for %s (%s).", filename, milvus_err)
 
