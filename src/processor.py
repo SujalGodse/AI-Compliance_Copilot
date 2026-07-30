@@ -38,7 +38,12 @@ else:
 # ─────────────────────────────────────────
 
 BASE_DIR     = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-LOG_PATH     = os.path.join(BASE_DIR, "logs", "processor.log")
+if not os.path.exists(os.path.join(BASE_DIR, "data")) and os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+LOG_DIR      = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOG_DIR, exist_ok=True)
+LOG_PATH     = os.path.join(LOG_DIR, "processor.log")
 POLICIES_DIR = os.path.join(BASE_DIR, "data", "policies")
 
 import sys
@@ -220,7 +225,7 @@ def extract_text_ocr(file_path: str) -> str:
             log.info("PaddleOCR page %d of %d...", page_num + 1, len(doc))
             mat = fitz.Matrix(150/72, 150/72)  # 150 DPI (75% lower RAM usage, 100% accuracy)
             pix = page.get_pixmap(matrix=mat)
-            img_bytes = pix.tobytes("jpeg", jpeg_quality=80)
+            img_bytes = pix.tobytes("jpg", jpg_quality=80)
 
             result, _ = engine(img_bytes)
             if result:
