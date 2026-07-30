@@ -20,6 +20,8 @@ function Policies() {
 
   useEffect(() => {
     loadPolicies()
+    const interval = setInterval(loadPolicies, 3000)
+    return () => clearInterval(interval)
   }, [])
 
   const handleFileChange = (e) => {

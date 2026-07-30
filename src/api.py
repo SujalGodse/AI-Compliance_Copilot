@@ -661,7 +661,7 @@ Answer:"""
 
 @app.get("/api/policies")
 def get_policies():
-    """Return list of all policy documents with S3 URLs."""
+    """Return list of all policy documents with chunk counts and S3 URLs."""
     conn = get_db()
     c    = conn.cursor()
 
@@ -676,13 +676,24 @@ def get_policies():
     rows = c.fetchall()
     conn.close()
 
+    db_map = {row["filename"]: row for row in rows}
+
+    all_files = set(db_map.keys())
+    if os.path.exists(POLICIES_DIR):
+        for f in os.listdir(POLICIES_DIR):
+            if f.endswith(".pdf"):
+                all_files.add(f)
+
     policies = []
-    for row in rows:
+    for fname in sorted(all_files):
+        row = db_map.get(fname)
+        chunks = row["chunks"] if row else 0
+        last_updated = row["last_updated"] if row else datetime.now().isoformat()
         policies.append({
-            "filename"    : row["filename"],
-            "chunks"      : row["chunks"],
-            "last_updated": row["last_updated"],
-            "s3_url"      : f"https://compliance-frontend-sujal-2026.s3.ap-south-1.amazonaws.com/policies/{row['filename']}"
+            "filename"    : fname,
+            "chunks"      : chunks,
+            "last_updated": last_updated,
+            "s3_url"      : f"https://compliance-frontend-sujal-2026.s3.ap-south-1.amazonaws.com/policies/{fname}"
         })
 
     return {"policies": policies}
