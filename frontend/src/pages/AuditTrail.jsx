@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
 
-const API_BASE = 'https://15.207.88.50.nip.io/api'
+import { API_BASE } from '../config'
 
 function AuditTrail() {
   const [audit, setAudit] = useState(null)

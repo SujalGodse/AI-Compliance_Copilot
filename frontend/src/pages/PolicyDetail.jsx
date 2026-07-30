@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import axios from 'axios'
 
-const API_BASE = 'https://15.207.88.50.nip.io/api'
+import { API_BASE } from '../config'
 
 function PolicyDetail() {
   const { filename } = useParams()
