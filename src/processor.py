@@ -332,16 +332,12 @@ def extract_pdf_text(source) -> str:
 # ─────────────────────────────────────────
 
 def clean_text(raw: str) -> str:
-    """Clean raw text using regex and spaCy."""
-    # collapse whitespace
+    """Clean raw text using regex."""
+    if not raw:
+        return ""
     text = re.sub(r'\s+', ' ', raw)
-    # remove special characters
     text = re.sub(r'[^\w\s\.\,\;\:\!\?\-\(\)\/]', ' ', text)
-    # spaCy sentence segmentation
-    doc   = nlp(text[:100000])
-    sents = [s.text.strip() for s in doc.sents
-             if len(s.text.strip()) > 20]
-    return ' '.join(sents)
+    return text.strip()
 
 # ─────────────────────────────────────────
 # CHUNKING

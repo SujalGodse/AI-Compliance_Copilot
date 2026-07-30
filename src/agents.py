@@ -488,12 +488,16 @@ Be specific. Use only the information provided above. Do not make up details."""
     log.info("Change list extracted: %d chars", len(change_list))
 
     # ── generate ticket ID ────────────────
-    ticket_id = f"CC-{datetime.now().strftime('%Y%m%d%H%M%S')}-{state['circular_id']}"
+    ticket_id = f"CC-2026-{state['circular_id']}"
 
     # ── write compliance ticket ───────────
     conn = get_db()
     c    = conn.cursor()
     try:
+        c.execute("DELETE FROM compliance_tickets WHERE circular_id = %s", (state["circular_id"],))
+        c.execute("DELETE FROM compliance_audit WHERE circular_id = %s", (state["circular_id"],))
+        conn.commit()
+
         c.execute("""
             INSERT INTO compliance_tickets
             (ticket_id, circular_id, source, title,
@@ -502,7 +506,6 @@ Be specific. Use only the information provided above. Do not make up details."""
              priority, affected_policies,
              summary, change_list, status, created_at)
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            ON CONFLICT (ticket_id) DO NOTHING
         """, (
             ticket_id,
             state["circular_id"],
