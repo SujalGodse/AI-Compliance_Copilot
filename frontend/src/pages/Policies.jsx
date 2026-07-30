@@ -28,6 +28,8 @@ function Policies() {
     setUploadError(null)
   }
 
+  const fileInputRef = useState(null)
+
   const handleUpload = async () => {
     if (!file) return
 
@@ -40,10 +42,13 @@ function Policies() {
 
     try {
       const res = await axios.post(`${API_BASE}/policies/upload`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 15000
       })
       setUploadResult(res.data)
       setFile(null)
+      const inputEl = document.getElementById('policy-file-input')
+      if (inputEl) inputEl.value = ''
       loadPolicies()
     } catch (err) {
       setUploadError(err.response?.data?.detail || err.message)
@@ -69,6 +74,7 @@ function Policies() {
 
         <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', alignItems: 'center', flexWrap: 'wrap' }}>
           <input
+            id="policy-file-input"
             type="file"
             accept=".pdf"
             onChange={handleFileChange}
