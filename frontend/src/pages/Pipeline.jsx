@@ -86,6 +86,10 @@ function Pipeline() {
   const stageInfo = STAGES[stage] || STAGES.idle
   const isRunning = status?.running || false
 
+  if (status === null && error === null) {
+    return <p style={{ padding: 24, color: 'var(--color-text-muted)' }}>Loading pipeline status...</p>
+  }
+
   return (
     <div>
       <h2 className="page-title">Pipeline Execution</h2>

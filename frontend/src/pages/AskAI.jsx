@@ -5,7 +5,10 @@ import { API_BASE } from '../config'
 
 function AskAI() {
   const [query, setQuery] = useState('')
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(() => {
+    const saved = localStorage.getItem('askai_history')
+    return saved ? JSON.parse(saved) : []
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -13,7 +16,9 @@ function AskAI() {
     if (!query.trim()) return
 
     const userMsg = { role: 'user', text: query }
-    setMessages(prev => [...prev, userMsg])
+    const updatedMessages = [...messages, userMsg]
+    setMessages(updatedMessages)
+    localStorage.setItem('askai_history', JSON.stringify(updatedMessages))
     setLoading(true)
     setError(null)
     setQuery('')
@@ -21,12 +26,19 @@ function AskAI() {
     try {
       const res = await axios.post(`${API_BASE}/chat`, { query: userMsg.text })
       const aiMsg = { role: 'ai', text: res.data.answer, sources: res.data.sources }
-      setMessages(prev => [...prev, aiMsg])
+      const newMessages = [...updatedMessages, aiMsg]
+      setMessages(newMessages)
+      localStorage.setItem('askai_history', JSON.stringify(newMessages))
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleClear = () => {
+    setMessages([])
+    localStorage.removeItem('askai_history')
   }
 
   const handleKeyPress = (e) => {
@@ -35,7 +47,25 @@ function AskAI() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'left' }}>
-      <h2>Ask AI</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>Ask AI</h2>
+        {messages.length > 0 && (
+          <button
+            onClick={handleClear}
+            style={{
+              padding: '6px 12px',
+              fontSize: '11px',
+              borderRadius: '4px',
+              border: '1px solid #ccc',
+              background: '#fff',
+              color: '#666',
+              cursor: 'pointer'
+            }}
+          >
+            🗑 Clear History
+          </button>
+        )}
+      </div>
       <p style={{ color: '#666' }}>Ask questions about your bank policies and compliance requirements.</p>
 
       <div style={{
