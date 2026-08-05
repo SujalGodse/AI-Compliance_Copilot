@@ -96,46 +96,41 @@ def root_redirect():
 @app.get("/api/health")
 def health_check():
     """Check all system components are running."""
-    import requests as req
 
     status = {
-        "api"   : True,
-        "sqlite": False,
-        "ollama": False,
-        "milvus": False,
+        "api"     : True,
+        "postgres": False,
+        "groq"    : False,
+        "s3"      : False,
     }
 
-    # check SQLite
+    # check PostgreSQL (RDS)
     try:
         conn = get_db()
-        conn.execute("SELECT 1")
+        c    = conn.cursor()
+        c.execute("SELECT 1")
         conn.close()
-        status["sqlite"] = True
+        status["postgres"] = True
     except Exception as e:
-        log.error("SQLite check failed: %s", e)
+        log.error("PostgreSQL check failed: %s", e)
 
-    # check Ollama
+    # check Groq API reachability
     try:
-        r = req.get("http://localhost:11434/api/tags",
-                    timeout=3)
-        status["ollama"] = r.status_code == 200
+        import requests as req
+        r = req.get("https://api.groq.com", timeout=5)
+        status["groq"] = r.status_code in [200, 301, 302, 403]
     except Exception:
-        status["ollama"] = False
+        status["groq"] = False
 
-    # check Milvus (GPU server, tunnelled to localhost:19530)
+    # check S3
     try:
-        from pymilvus import connections, utility
-        connections.connect(
-            alias="health",
-            host=os.getenv("MILVUS_HOST", "127.0.0.1"),
-            port=int(os.getenv("MILVUS_PORT", "19530")),
-            timeout=3
-        )
-        cols = utility.list_collections(using="health")
-        status["milvus"] = len(cols) > 0
-        connections.disconnect("health")
-    except Exception as e:
-        log.error("Milvus check failed: %s", e)
+        import boto3
+        s3  = boto3.client('s3', region_name=os.getenv('AWS_REGION', 'ap-south-1'))
+        bucket = os.getenv('S3_BUCKET_NAME', 'compliance-frontend-sujal-2026')
+        s3.head_bucket(Bucket=bucket)
+        status["s3"] = True
+    except Exception:
+        status["s3"] = False
 
     return status
 
