@@ -40,8 +40,8 @@ MODEL_FAST    = "llama-3.1-8b-instant"       # Ultra-fast 8B for Agent 1 Classif
 MODEL_HEAVY   = "qwen-2.5-coder-32b"         # Qwen / 70B model for Agent 3 RAG Summary & Ticket Generation
 GROQ_MODEL    = MODEL_HEAVY
 
-THRESHOLD_HIGH   = 0.80
-THRESHOLD_MEDIUM = 0.60
+THRESHOLD_HIGH   = 0.52
+THRESHOLD_MEDIUM = 0.46
 THRESHOLD_LOW    = 0.40
 
 # ─────────────────────────────────────────

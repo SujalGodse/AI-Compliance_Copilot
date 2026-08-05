@@ -4,7 +4,7 @@ import axios from 'axios'
 import StatCard from '../components/StatCard'
 import DriftChart from '../components/DriftChart'
 
-const API = 'https://15.207.88.50.nip.io/api'
+import { API_BASE } from '../config'
 
 function Dashboard() {
   const [stats,   setStats]   = useState(null)
@@ -15,9 +15,9 @@ function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      axios.get(API + '/stats'),
-      axios.get(API + '/drift-scores'),
-      axios.get(API + '/dashboard-summary'),
+      axios.get(API_BASE + '/stats'),
+      axios.get(API_BASE + '/drift-scores'),
+      axios.get(API_BASE + '/dashboard-summary'),
     ])
       .then(([s, d, sum]) => {
         setStats(s.data)
