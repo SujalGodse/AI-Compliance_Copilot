@@ -453,72 +453,208 @@ def get_dashboard_summary():
 # PIPELINE — trigger manually from UI
 # ─────────────────────────────────────────
 
+# Shared pipeline state — persists in memory across requests
+_pipeline_state = {
+    "running"   : False,
+    "started_at": None,
+    "finished_at": None,
+    "stage"     : "idle",      # idle | ingestion | ocr | embedding | agents | done | error
+    "logs"      : [],
+    "total_processed": 0,
+    "total_archived" : 0,
+    "total_failed"   : 0,
+    "current_circular": "",
+    "error"     : None,
+}
+
+def _plog(msg: str):
+    """Append a timestamped message to the pipeline log."""
+    ts = datetime.utcnow().strftime("%H:%M:%S")
+    entry = f"[{ts}] {msg}"
+    _pipeline_state["logs"].append(entry)
+    log.info("PIPELINE | %s", msg)
+
+
 def run_full_pipeline_task():
     """Background execution function for full compliance pipeline."""
-    log.info("Pipeline background task starting...")
+    global _pipeline_state
+
+    # Reset state
+    _pipeline_state["running"]         = True
+    _pipeline_state["started_at"]      = datetime.utcnow().isoformat()
+    _pipeline_state["finished_at"]     = None
+    _pipeline_state["stage"]           = "ingestion"
+    _pipeline_state["logs"]            = []
+    _pipeline_state["total_processed"] = 0
+    _pipeline_state["total_archived"]  = 0
+    _pipeline_state["total_failed"]    = 0
+    _pipeline_state["current_circular"]= ""
+    _pipeline_state["error"]           = None
+
     try:
-        from ingestion import init_db, fetch_sebi, fetch_sebi_historical
-        init_db()
+        # ── STAGE 1: Ingestion ─────────────────────────────────────
+        _plog("Stage 1/4: Fetching live SEBI & RBI circulars from regulators...")
+        _pipeline_state["stage"] = "ingestion"
         try:
+            from ingestion import init_db, fetch_sebi, fetch_sebi_historical
+            init_db()
+            _plog("  Fetching SEBI live RSS feed...")
             fetch_sebi()
-        except Exception as e:
-            log.warning("Scraper notice (SEBI RSS): %s", e)
-        try:
+            _plog("  Fetching SEBI historical circulars...")
             fetch_sebi_historical()
+            _plog("  Stage 1 complete: Circulars stored in RDS document_queue.")
         except Exception as e:
-            log.warning("Scraper notice (SEBI Historical): %s", e)
-    except Exception as e:
-        log.warning("Ingestion step notice: %s", e)
+            _plog(f"  Stage 1 warning (scraper): {e} — continuing with existing circulars.")
 
-    try:
-        from processor import init_chunks_table, init_policy_chunks_table, process_pending
-        init_chunks_table()
-        init_policy_chunks_table()
+        # ── STAGE 2: OCR + Chunking ────────────────────────────────
+        _plog("Stage 2/4: Running PaddleOCR text extraction & parent-child chunking...")
+        _pipeline_state["stage"] = "ocr"
         try:
+            from processor import init_chunks_table, init_policy_chunks_table, process_pending
+            init_chunks_table()
+            init_policy_chunks_table()
             process_pending()
+            _plog("  Stage 2 complete: Text extraction & chunking finished.")
         except Exception as e:
-            log.warning("Processor notice: %s", e)
-    except Exception as e:
-        log.warning("Processor step notice: %s", e)
+            _plog(f"  Stage 2 warning (OCR/chunking): {e}")
 
-    try:
-        from embeddings import embed_circulars, embed_policies
+        # ── STAGE 3: Embeddings ────────────────────────────────────
+        _plog("Stage 3/4: Generating 1024-d embeddings and indexing into Milvus...")
+        _pipeline_state["stage"] = "embedding"
         try:
+            from embeddings import embed_circulars, embed_policies
+            _plog("  Embedding circulars into Milvus collection...")
             embed_circulars()
-        except Exception as e:
-            log.warning("Embed circulars notice: %s", e)
-        try:
+            _plog("  Embedding policies into Milvus collection...")
             embed_policies()
+            _plog("  Stage 3 complete: All vectors indexed in Milvus.")
         except Exception as e:
-            log.warning("Embed policies notice: %s", e)
-    except Exception as e:
-        log.warning("Embeddings step notice: %s", e)
+            _plog(f"  Stage 3 warning (embeddings): {e}")
 
-    try:
-        from agents import run_pipeline
-        run_pipeline(force_reprocess=True)
-        log.info("Pipeline background task completed successfully.")
+        # ── STAGE 4: Multi-Agent Audit ─────────────────────────────
+        _plog("Stage 4/4: Running Multi-Agent compliance audit (Groq LLM)...")
+        _pipeline_state["stage"] = "agents"
+        try:
+            from agents import get_pending_circulars, build_graph, init_agent_tables
+            init_agent_tables()
+            graph = build_graph()
+
+            # Only process circulars that don't have tickets yet
+            pending = get_pending_circulars(force_reprocess=False)
+            _plog(f"  Found {len(pending)} new circulars without tickets.")
+
+            if not pending:
+                _plog("  No new circulars to process. All circulars already have tickets.")
+            else:
+                processed = archived = failed = 0
+                for i, circular in enumerate(pending):
+                    cid = circular.get("circular_id", "?")
+                    title = circular.get("title", "Untitled")[:60]
+                    _plog(f"  [{i+1}/{len(pending)}] Processing: {title}")
+                    _pipeline_state["current_circular"] = title
+
+                    initial_state = {
+                        **circular,
+                        "regulator"        : None,
+                        "domain"           : None,
+                        "doc_type"         : None,
+                        "matched_chunks"   : None,
+                        "drift_score"      : None,
+                        "semantic_score"   : None,
+                        "policy_score"     : None,
+                        "entity_score"     : None,
+                        "priority"         : None,
+                        "affected_policies": None,
+                        "summary"          : None,
+                        "change_list"      : None,
+                        "ticket_id"        : None,
+                        "route"            : None,
+                    }
+
+                    try:
+                        result = graph.invoke(initial_state)
+                        if result.get("route") == "archive":
+                            archived += 1
+                            _plog(f"    → Archived (low drift)")
+                        else:
+                            processed += 1
+                            _plog(f"    → Ticket created: {result.get('ticket_id')} | priority: {result.get('priority')} | drift: {result.get('drift_score', 0):.4f}")
+                    except Exception as ex:
+                        failed += 1
+                        _plog(f"    → Error: {ex}")
+
+                _pipeline_state["total_processed"] = processed
+                _pipeline_state["total_archived"]  = archived
+                _pipeline_state["total_failed"]    = failed
+                _plog(f"  Stage 4 complete: {processed} tickets created, {archived} archived, {failed} errors.")
+
+        except Exception as e:
+            _plog(f"  Stage 4 error (agents): {e}")
+            _pipeline_state["error"] = str(e)
+
+        _pipeline_state["stage"] = "done"
+        _plog("✅ Full pipeline execution completed successfully!")
+
     except Exception as e:
-        log.error("Pipeline agent execution error: %s", e)
+        _pipeline_state["stage"] = "error"
+        _pipeline_state["error"] = str(e)
+        _plog(f"❌ Pipeline failed: {e}")
+        log.error("Pipeline fatal error: %s", e)
+
+    finally:
+        _pipeline_state["running"]      = False
+        _pipeline_state["finished_at"]  = datetime.utcnow().isoformat()
+        _pipeline_state["current_circular"] = ""
 
 
 @app.post("/api/pipeline/run")
 def run_pipeline_endpoint(background_tasks: BackgroundTasks):
-    """Trigger full pipeline asynchronously in background to prevent HTTP timeout Network Errors."""
+    """Trigger full pipeline asynchronously. Returns immediately — use /api/pipeline/status to track progress."""
+    global _pipeline_state
+
+    # Prevent double-run
+    if _pipeline_state["running"]:
+        return {
+            "status" : "already_running",
+            "message": "Pipeline is already running! Check /api/pipeline/status for live progress.",
+            "stage"  : _pipeline_state["stage"],
+        }
+
     log.info("Pipeline execution requested from UI")
     background_tasks.add_task(run_full_pipeline_task)
 
+    return {
+        "status" : "started",
+        "message": "Pipeline started in background. Poll GET /api/pipeline/status for live progress.",
+    }
+
+
+@app.get("/api/pipeline/status")
+def pipeline_status():
+    """Returns real-time pipeline progress: stage, logs, and results."""
     conn = get_db()
     c = conn.cursor()
     c.execute("SELECT COUNT(*) as count FROM compliance_tickets")
-    row = c.fetchone()
-    total = row['count'] if row else 0
+    row  = c.fetchone()
+    total_tickets = row['count'] if row else 0
+    c.execute("SELECT COUNT(*) as count FROM document_queue WHERE status='processed'")
+    row2 = c.fetchone()
+    processed_circulars = row2['count'] if row2 else 0
     conn.close()
 
     return {
-        "status" : "success",
-        "message": "Pipeline execution started in background! Ingestion, PaddleOCR, Milvus embeddings, and Multi-Agent audit are processing.",
-        "total_tickets": total
+        "running"           : _pipeline_state["running"],
+        "stage"             : _pipeline_state["stage"],
+        "started_at"        : _pipeline_state["started_at"],
+        "finished_at"       : _pipeline_state["finished_at"],
+        "current_circular"  : _pipeline_state["current_circular"],
+        "logs"              : _pipeline_state["logs"][-50:],  # last 50 log lines
+        "total_processed"   : _pipeline_state["total_processed"],
+        "total_archived"    : _pipeline_state["total_archived"],
+        "total_failed"      : _pipeline_state["total_failed"],
+        "error"             : _pipeline_state["error"],
+        "db_tickets"        : total_tickets,
+        "db_circulars_done" : processed_circulars,
     }
 
 # ─────────────────────────────────────────
